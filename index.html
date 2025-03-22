@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galgje Spel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .game-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .word-container {
+            font-size: 24px;
+            letter-spacing: 10px;
+            margin-bottom: 20px;
+        }
+        .input-box {
+            font-size: 18px;
+            padding: 10px;
+            width: 50px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        #message {
+            font-size: 18px;
+            color: green;
+            margin-top: 10px;
+        }
+        .separator {
+            margin: 20px 0;
+            border-top: 2px solid #ddd;
+            width: 100%;
+        }
+        .word-separator {
+            border-left: 2px solid #ddd;
+            margin-left: 10px;
+            margin-right: 10px;
+            height: 30px;
+            display: inline-block;
+        }
+        #correct-words {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: left;
+        }
+        #correct-words ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #correct-words ul li {
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Galgje Spel</h1>
+        <p>Raad het woord!</p>
+        
+        <div id="word-container" class="word-container"></div>
+        <div class="separator"></div>
+        <input type="text" id="letter-input" class="input-box" maxlength="1" autofocus />
+        <button onclick="checkLetter()">Raad Letter</button>
+        <p id="message"></p>
+
+        <div id="correct-words" style="display:none;">
+            <h2>Correct Geraden Woorden:</h2>
+            <ul id="correct-words-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const words = ["ourthe", "generaal ron", "kasteel celly", "ridders van het rode kruis"];
+        let selectedWord;
+        let guessedLetters;
+        let remainingWords;
+        let attempts;
+        let correctGuesses;
+        let correctWords = [];
+
+        function initializeGame() {
+            remainingWords = [...words];  // Maak een kopie van de woordenlijst
+            attempts = 6;  // Foutenteller opnieuw instellen bij elke start
+            correctGuesses = 0;
+            guessedLetters = [];
+            nextRound();
+        }
+
+        function nextRound() {
+            if (remainingWords.length === 0) {
+                document.getElementById("message").textContent = "Alle woorden zijn geraden!";
+                showCorrectWords();
+                return;
+            }
+
+            // Kies een nieuw woord en verwijder het uit de lijst van resterende woorden
+            selectedWord = remainingWords.splice(Math.floor(Math.random() * remainingWords.length), 1)[0];
+            guessedLetters = [];
+            attempts = 6;  // Herstel de foutenteller naar 6 bij elke nieuwe ronde
+            document.getElementById("message").textContent = "";
+            displayWord();
+        }
+
+        function displayWord() {
+            const wordDisplay = selectedWord.split('').map(letter => {
+                if (letter === ' ' || guessedLetters.includes(letter)) {
+                    return ' ' === letter ? '<span class="word-separator"></span>' : letter;  // Voeg een visuele scheiding toe bij spaties
+                } else {
+                    return '_';  // Andere niet-geraden letters worden als underscores weergegeven
+                }
+            }).join(' ');  // Spaties tussen de underscores
+
+            document.getElementById("word-container").innerHTML = wordDisplay;
+        }
+
+        function checkLetter() {
+            const letter = document.getElementById("letter-input").value.toLowerCase();
+            if (letter === "" || guessedLetters.includes(letter)) {
+                return;
+            }
+
+            guessedLetters.push(letter);
+
+            if (selectedWord.toLowerCase().includes(letter)) {
+                displayWord();
+                checkWin();
+            } else {
+                attempts--;
+                if (attempts <= 0) {  // Zorgen dat de foutenteller niet onder 0 komt
+                    document.getElementById("message").textContent = `Je hebt verloren!`;
+                    setTimeout(nextRound, 2000);
+                } else {
+                    document.getElementById("message").textContent = `Fout! Nog ${attempts} pogingen over.`;
+                }
+            }
+
+            document.getElementById("letter-input").value = '';
+        }
+
+        function checkWin() {
+            const wordDisplay = selectedWord.split('').map(letter => {
+                return (letter === ' ' || guessedLetters.includes(letter)) ? letter : '_';
+            }).join(' ');
+
+            if (!wordDisplay.includes('_')) {
+                correctGuesses++;
+                correctWords.push(selectedWord);  // Voeg het correct geraden woord toe aan de lijst
+                document.getElementById("message").textContent = `Gewonnen! Goed gedaan!`;
+                setTimeout(nextRound, 2000);
+            }
+        }
+
+        function showCorrectWords() {
+            const correctWordsList = document.getElementById("correct-words-list");
+            correctWordsList.innerHTML = '';  // Maak de lijst leeg voordat we deze vullen
+
+            correctWords.forEach(word => {
+                const listItem = document.createElement("li");
+                listItem.textContent = word;
+                correctWordsList.appendChild(listItem);
+            });
+
+            document.getElementById("correct-words").style.display = 'block';  // Toon de lijst met correcte woorden
+        }
+
+        initializeGame();
+    </script>
+</body>
+</html>
